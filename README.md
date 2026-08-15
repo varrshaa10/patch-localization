@@ -150,6 +150,25 @@ Ratio on PASSED pairs (n=32): min=0.980, max=0.990, mean=0.985
 Results are written to `batch_results.csv`.
 
 ---
+### Reproduced Evaluation
+
+Evaluation on 40 generated grayscale reference/search pairs:
+
+| Metric | Result |
+|---|---:|
+| Accuracy @ 1 px | 80.0% |
+| Accuracy @ 2 px | 80.0% |
+| Accuracy @ 3 px | 80.0% |
+| Accuracy @ 5 px | 80.0% |
+| Median localization error | 0.45 px |
+| Mean localization error | 52.72 px |
+| Mean inference time | 1.87 s/image |
+| Successful pairs | 32/40 |
+| Ambiguous/failure pairs | 8/40 |
+
+The 8 failures occur in intentionally marker-free periodic-array cases where multiple
+candidate locations have essentially identical NCC scores. The system reports LOW
+confidence rather than claiming a unique localization.
 
 ## Results Summary
 
