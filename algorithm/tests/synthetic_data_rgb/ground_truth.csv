@@ -1,0 +1,6 @@
+pair_id,architecture,ref_path,search_path,gt_x,gt_y,angle,scale,add_marker,mode
+0,dram,./tests/synthetic_data_rgb\pair_0_reference_rgb.png,./tests/synthetic_data_rgb\pair_0_search_rgb.png,474.4,389.2,2.31,10,False,RGB
+1,finfet,./tests/synthetic_data_rgb\pair_1_reference_rgb.png,./tests/synthetic_data_rgb\pair_1_search_rgb.png,807.2,359.5,0.39,10,False,RGB
+2,dram,./tests/synthetic_data_rgb\pair_2_reference_rgb.png,./tests/synthetic_data_rgb\pair_2_search_rgb.png,273.9,61.6,-2.81,10,True,RGB
+3,finfet,./tests/synthetic_data_rgb\pair_3_reference_rgb.png,./tests/synthetic_data_rgb\pair_3_search_rgb.png,108.8,461.9,2.77,10,True,RGB
+4,dram,./tests/synthetic_data_rgb\pair_4_reference_rgb.png,./tests/synthetic_data_rgb\pair_4_search_rgb.png,124.9,311.5,-1.03,10,True,RGB

@@ -1,0 +1,10 @@
+{
+  "pair_id": 1,
+  "image_path": "synthetic_data\\pair_1_image.png",
+  "template_path": "synthetic_data\\pair_1_template.png",
+  "gt_x": 179,
+  "gt_y": 337,
+  "gt_angle": 21.0584412338102,
+  "gt_scale": 1.0119630359894356,
+  "template_size": 100
+}
