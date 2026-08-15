@@ -324,7 +324,7 @@ See [citations.md](citations.md) for full citations and their justifications.
 
 ## License
 
- MIT
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ---
 
