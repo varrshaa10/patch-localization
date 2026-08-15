@@ -79,6 +79,39 @@ python dataset/generate_dataset.py --architecture both --num_pairs 40 --output_d
   - `pair_id`, `architecture`, `ref_path`, `search_path`, `gt_x`, `gt_y`, `angle`, `scale`, `add_marker`, `mode`
 
 ---
+### Optional: RGB Dataset Generation
+
+The dataset generator also supports RGB output for testing color-tinted SEM-style patterns.
+
+Generate a small RGB test dataset:
+
+```bash
+python dataset/generate_dataset.py --architecture both --num_pairs 3 --output_dir ./tests/synthetic_data_rgb --color
+```
+
+This generates RGB reference/search pairs and a `ground_truth.csv` file in:
+
+```text
+./tests/synthetic_data_rgb/
+```
+
+To run inference on an RGB pair:
+
+```bash
+cd algorithm/core
+python infer.py --reference ../tests/synthetic_data_rgb/pair_2_reference_rgb.png --search ../tests/synthetic_data_rgb/pair_2_search_rgb.png
+```
+
+Example output:
+
+```text
+Predicted center (x, y): (762, 236)
+NCC score: 0.933
+Ambiguity ratio: 0.923  Confidence: HIGH
+Best angle: 0.0 deg, best scale: 0.100
+```
+
+RGB generation is an optional robustness test. The primary evaluation uses the grayscale synthetic dataset.
 
 ### Run Inference on a Single Pair
 
