@@ -32,3 +32,36 @@ This project uses normalized cross-correlation (NCC) template matching with mult
 - Ground truth is perfectly known (synthetic data)
 - Patterns may be periodic (creating the core challenge)
 - Quick inference without GPU is required
+
+---
+
+## How the Literature Informs the Synthetic Augmentations
+
+The synthetic image generator uses physically motivated effects to make the
+navigation/localization task less idealized. These effects are simulation
+choices rather than claims that the generated images reproduce a particular
+SEM instrument exactly.
+
+| Effect | Implementation in this project | Motivation |
+|---|---|---|
+| Independent sensor/statistical noise | Poisson + Gaussian components applied independently to reference and search images | SEM imaging is based on electron detection and image acquisition, so separate captures can contain different measurement noise |
+| Charging / contrast variation | Edge-dependent intensity enhancement | SEM charging can produce measurable bright/dark contrast variations and can reveal or obscure structures |
+| 10× field-of-view difference | 10,000×10,000 continuous layout downsampled to 1,000×1,000 | SEM magnification determines the physical area represented by each image pixel |
+| Small rotation | Reference rotated within ±3° | Models small acquisition/orientation differences between independent captures |
+| Feature/layout jitter | Small randomized feature dimensions and spacing | Semiconductor metrology explicitly studies line-edge roughness and dimensional variation |
+
+### References
+
+1. Zhang, H.-B., Feng, R.-J., & Ura, K. (2004).
+   *Utilizing the Charging Effect in Scanning Electron Microscopy.*
+   Scanning, 26(6), 258–265.
+   DOI: https://doi.org/10.3184/003685004783238490
+
+2. Bertness, K. A. (2017).
+   *Dimensional Measurement of Nanostructures with Scanning Electron Microscopy.*
+   NIST Special Publication 250-96.
+   DOI: https://doi.org/10.6028/NIST.SP.250-96
+
+3. Bunday, B. B., Bishop, M. R., Villarrubia, J. S., & Vladar, A.
+   *CD-SEM Measurement of Line Edge Roughness Test Patterns for 193 nm Lithography.*
+   NIST.
