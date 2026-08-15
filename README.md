@@ -324,7 +324,7 @@ See [citations.md](citations.md) for full citations and their justifications.
 
 ## License
 
-[Specify license here, e.g., MIT, Apache 2.0, etc.]
+ MIT
 
 ---
 
