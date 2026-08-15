@@ -19,7 +19,7 @@ The solution uses **normalized cross-correlation (NCC)** template matching combi
 
 ### 1. Clone the Repository
 ```bash
-git clone <https://github.com/varrshaa10/patch-localization>
+git clone https://github.com/varrshaa10/patch-localization
 cd patch-localization
 ```
 
