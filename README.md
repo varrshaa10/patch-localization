@@ -166,9 +166,19 @@ Evaluation on 40 generated grayscale reference/search pairs:
 | Successful pairs | 32/40 |
 | Ambiguous/failure pairs | 8/40 |
 
-The 8 failures occur in intentionally marker-free periodic-array cases where multiple
-candidate locations have essentially identical NCC scores. The system reports LOW
-confidence rather than claiming a unique localization.
+### Failure Analysis
+
+The 8 failure cases are intentional marker-free periodic-array cases.
+Multiple candidate locations produce essentially identical NCC scores.
+
+For these cases:
+
+- Ambiguity ratio = 1.000
+- Confidence = LOW
+- The matcher reports multiple candidate locations instead of falsely claiming a unique location.
+
+The remaining 32 marker-aided cases achieve sub-pixel localization in the reproduced
+evaluation, with a median error of 0.45 px.
 
 ## Results Summary
 
@@ -196,6 +206,7 @@ confidence rather than claiming a unique localization.
   - Pixel error: typically < 1 px
 
 **Agreement with ground truth:** 100% (confidence label perfectly predicts success/failure)
+
 
 ---
 
