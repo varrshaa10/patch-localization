@@ -8,10 +8,22 @@ The solution uses **normalized cross-correlation (NCC)** template matching combi
 
 **Key characteristics:**
 - Classical computer vision approach (no DL models, training, or model weights)
-- Synthetic dataset: 40 image pairs (20 DRAM + 20 FinFET microstructures)
-- 80% accuracy on periodic-ambiguity test suite
-- Confidence detection: 100% agreement with ground truth correctness
-- Includes 8 intentional hard cases (periodic patterns, no navigation marker)
+- Synthetic dataset: 60 image pairs (30 DRAM + 30 FinFET microstructures), with per-shape jitter enabled
+- Accuracy: **83.3%** within 1–20 px and **85.0%** at 50 px tolerance
+- Confidence detection: fixed ambiguity-ratio rule remains the strongest practical decision rule
+- Includes about 10 intentionally hard/no-marker cases representing periodic ambiguity
+
+---
+
+## Quick Start (pipeline)
+
+From the `algorithm/` directory, the one-command repro path is:
+
+```bash
+python pipeline.py --config config.yaml --skip-generate
+```
+
+This runs the end-to-end workflow using the existing dataset, executes batch evaluation, and saves the accuracy plot without regenerating the synthetic data first.
 
 ---
 
@@ -46,7 +58,17 @@ pip install -r requirements.txt
 - `numpy` — Numerical computation
 - `opencv-python` — Image processing (template matching, transformations)
 - `pillow` — Image I/O
-- `matplotlib` — Plotting (optional, for visualization)
+- `matplotlib` — Plotting and PR-curve generation
+- `PyYAML` — YAML config parsing
+- `pandas` — CSV analysis and evaluation logs
+- `joblib` — Saving/loading the optional calibrator model
+- `scikit-learn` — Optional calibration experiment
+
+---
+
+## Configuration
+
+The project now keeps the core matching and evaluation settings in `algorithm/config.yaml`. This file stores the synthetic-data generation settings, matching ranges, ambiguity threshold, and evaluation tolerances used by the pipeline and associated scripts. The pipeline reads the dataset generation parameters from this config file, while the matching logic and batch-eval summaries still use the same core algorithm behavior.
 
 ---
 
@@ -68,9 +90,9 @@ python dataset/generate_dataset.py [--architecture {dram|finfet|both}] [--num_pa
 
 **Examples:**
 ```bash
-python dataset/generate_dataset.py --architecture both --num_pairs 40 --output_dir ./tests/synthetic_data
+python dataset/generate_dataset.py --architecture both --num_pairs 60 --output_dir ./tests/synthetic_data
 python dataset/generate_dataset.py --architecture both --num_pairs 5 --output_dir ./tests/synthetic_data_rgb --color
-python dataset/generate_dataset.py --architecture both --num_pairs 40 --output_dir ./tests/synthetic_data --jitter
+python dataset/generate_dataset.py --architecture both --num_pairs 60 --output_dir ./tests/synthetic_data --jitter
 ```
 
 **Output:**
@@ -133,18 +155,18 @@ cd algorithm/core
 python batch_eval.py
 ```
 
-This evaluates the matcher on all 40 ground-truth pairs, computes per-pair pixel error, and generates a summary report.
+This evaluates the matcher on all 60 ground-truth pairs, computes per-pair pixel error, and generates a summary report.
 
 **Output:**
 ```
-Accuracy within 1px: 80.0%
-Accuracy within 2px: 80.0%
+Accuracy within 1px: 83.3%
+Accuracy within 2px: 83.3%
 ...
-Accuracy within 50px: 80.0%
+Accuracy within 50px: 85.0%
 
 Ambiguity ratio distribution:
-Ratio on FAILED pairs (n=8): min=1.000, max=1.000, mean=1.000
-Ratio on PASSED pairs (n=32): min=0.980, max=0.990, mean=0.985
+Ratio on FAILED pairs (n=10): min=0.999, max=1.000, mean=1.000
+Ratio on PASSED pairs (n=50): min=0.980, max=0.993, mean=0.985
 ```
 
 Results are written to `batch_results.csv`.
@@ -153,30 +175,43 @@ Results are written to `batch_results.csv`.
 
 ## Results Summary
 
-**Accuracy Metrics (40-pair test suite):**
-- Accuracy within 1–50 pixels: **80.0%** (32/40 pairs correct)
-- Mean pixel error: **65.90 px** on the jittered dataset
-- Median pixel error: **0.50 px** (high-performing cases)
+**Accuracy Metrics (60-pair test suite):**
+- Accuracy within **1–20 px**: **83.3%** (50/60 pairs correct)
+- Accuracy within **50 px**: **85.0%** (51/60 pairs correct)
+- Mean pixel error: **72.22 px** on the jittered 60-pair dataset
+- Median pixel error: **0.42 px** (high-performing cases)
+
+**Hard and ambiguous cases:**
+- The current 60-pair suite contains about **10 hard/no-marker pairs** that are intentionally periodic and ambiguous.
+- These cases cluster near an ambiguity ratio of **1.000** and are correctly flagged as LOW confidence instead of returning a misleading location.
 
 **RGB test check:**
 - 3 representative RGB pairs were evaluated and all landed within a fraction of a pixel of ground truth, confirming grayscale conversion inside the NCC matcher is working correctly.
 
 **Jittered dataset check:**
-- Re-generated the full 40-pair dataset with ±10–20% random size perturbations.
-- Accuracy remained **80.0%** across all tolerances, with the same 8 intentionally ambiguous LOW-confidence cases and 32 HIGH-confidence successful cases.
+- Re-generated the full 60-pair dataset with per-shape jitter enabled.
+- Accuracy remained **83.3%** across the 1–20 px tolerance band, and **85.0%** at 50 px, with roughly 10 intentionally ambiguous LOW-confidence cases and 50 successful HIGH-confidence cases.
 
 **Confidence Detection:**
-- **8 FAILED pairs** (periodic ambiguity, no navigation marker):
-  - Ambiguity ratio: exactly **1.000** (tied second-best locations)
+- **10 FAILED pairs** (periodic ambiguity, no navigation marker):
+  - Ambiguity ratio: **0.999–1.000** (near-tied second-best locations)
   - Confidence label: **LOW**
-  - Pixel error range: 225–786 px
+  - Pixel error range: 136–695 px
   
-- **32 PASSED pairs** (marker-aided localization):
-  - Ambiguity ratio: **0.980–0.990** (clear winner)
+- **50 PASSED pairs** (marker-aided localization):
+  - Ambiguity ratio: **0.980–0.993** (clear winner)
   - Confidence label: **HIGH**
   - Pixel error: typically < 1 px
 
-**Agreement with ground truth:** 100% (confidence label perfectly predicts success/failure)
+**Agreement with ground truth:** the fixed ambiguity-ratio rule remains the strongest real-world decision signal for this dataset.
+
+### Bonus: Learned Confidence Calibrator (Optional)
+
+The `algorithm/train_calibrator.py` script is a comparison experiment only. It trains a logistic-regression model on the collected `ncc_score` and `ambiguity_ratio` features, using the labeled examples in `algorithm/training_data/run1.csv` through `run4.csv`.
+
+This data was generated by a repeated loop: regenerate the dataset, run batch evaluation, then copy the per-pair CSV output into `training_data/` for the calibrator experiment. The experiment is intentionally documented as a negative result, not as a bug or omission.
+
+The learned model achieved **83.3% test accuracy**, but this was a degenerate outcome: it predicted almost entirely the majority class, with **0% precision and 0% recall for the FAIL class** because the dataset is heavily imbalanced (roughly 16% failures) and the features were not scaled. By contrast, the existing fixed rule using the **0.995 ambiguity-ratio threshold** achieved **98.3% accuracy on the same test split** and correctly detected failures. That result is the honest final finding: the fixed threshold outperforms the naive learned calibrator on this dataset.
 
 ---
 
@@ -184,19 +219,19 @@ Results are written to `batch_results.csv`.
 
 ### Periodic Ambiguity Without Disambiguating Features
 
-The matcher uses template correlation, which fundamentally cannot distinguish between identical or nearly-identical repeating patterns without additional context. The test suite includes **8 pairs with no navigation marker** (intentional hard cases):
+The matcher uses template correlation, which fundamentally cannot distinguish between identical or nearly-identical repeating patterns without additional context. The current 60-pair suite includes about **10 pairs with no navigation marker** (intentional hard cases):
 
-- **DRAM checkerboard (4 pairs)**: Grid of identical cells. Without marker, multiple grid locations have equally high correlation.
-- **FinFET stripes (4 pairs)**: Parallel lines. Multiple stripe boundaries produce equally high correlation.
+- **DRAM checkerboard (approximately 5 pairs)**: Grid of identical cells. Without marker, multiple grid locations have equally high correlation.
+- **FinFET stripes (approximately 5 pairs)**: Parallel lines. Multiple stripe boundaries produce equally high correlation.
 
-**Result:** The matcher correctly assigns **ratio = 1.000 (LOW confidence)** to these cases, flagging them as ambiguous rather than returning a spurious location.
+**Result:** The matcher correctly assigns **ratio ≈ 1.000 (LOW confidence)** to these cases, flagging them as ambiguous rather than returning a spurious location.
 
 **Industry context:** Real SEM workflows address this by:
 1. Printing a navigation fiducial (marker) on the chip
 2. Using multi-modal cues (e.g., overlay with charged regions or defects)
 3. Applying multi-hypothesis tracking across drift measurements
 
-This project simulates the marker-aided case (32 pairs) and the marker-free case (8 pairs) to demonstrate both the success and failure modes.
+This project simulates the marker-aided case (50 pairs) and the marker-free case (10 pairs) to demonstrate both the success and failure modes.
 
 ---
 
@@ -208,7 +243,7 @@ patch-localization/
 │   ├── core/                          # Main inference and evaluation
 │   │   ├── infer.py                   # Single-pair inference entry point
 │   │   ├── ncc.py                     # NCC template matching (cv2.matchTemplate)
-│   │   ├── batch_eval.py              # Batch evaluation over 40 pairs
+│   │   ├── batch_eval.py              # Batch evaluation over 60 pairs
 │   │   ├── rotation_search.py         # Image rotation helper
 │   │   ├── scale_rotation_search.py   # Scale and rotation helper
 │   │   ├── plot_pr_curve.py           # Accuracy-vs-tolerance plot
@@ -218,7 +253,7 @@ patch-localization/
 │   │   └── batch_results.csv          # Batch evaluation results
 │   │
 │   ├── dataset/                       # Dataset generation
-│   │   ├── generate_dataset.py        # Generate 40 synthetic pairs
+│   │   ├── generate_dataset.py        # Generate 60 synthetic pairs
 │   │   └── verify_gt.py               # Verify ground-truth annotations
 │   │
 │   ├── scripts/                       # Utility and debug scripts

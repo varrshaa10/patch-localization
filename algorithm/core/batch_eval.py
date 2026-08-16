@@ -7,6 +7,9 @@ results = []
 with open("../tests/synthetic_data/ground_truth.csv") as f:
     rows = list(csv.DictReader(f))
 
+print(f"{'ID':<4}{'Arch':<8}{'Mark':<6}{'GT (x,y)':<16}{'Pred (x,y)':<16}{'Error':>9}  {'Conf':<6}")
+print("-" * 80)
+
 for row in rows:
     pair_id = row["pair_id"]
     ref_path = row["ref_path"]
@@ -19,21 +22,28 @@ for row in rows:
     elapsed = time.time() - start
 
     error = ((pred_x - gt_x) ** 2 + (pred_y - gt_y) ** 2) ** 0.5
+    dx = pred_x - gt_x
+    dy = pred_y - gt_y
+
     results.append({
         "pair_id": pair_id,
         "architecture": row["architecture"],
         "add_marker": add_marker,
         "gt_x": gt_x, "gt_y": gt_y,
         "pred_x": pred_x, "pred_y": pred_y,
+        "dx": dx,
+        "dy": dy,
         "pixel_error": error,
         "ncc_score": score,
         "ambiguity_ratio": ratio,
         "confidence": confidence,
         "time_sec": elapsed
     })
-    print(f"Pair {pair_id} ({row['architecture']}, marker={add_marker}): "
-          f"error={error:.2f}px, score={score:.3f}, ratio={ratio:.3f}, "
-          f"confidence={confidence}, time={elapsed:.2f}s")
+
+    gt_coord = f"({gt_x:.0f},{gt_y:.0f})"
+    pred_coord = f"({pred_x},{pred_y})"
+    print(f"{pair_id:<4}{row['architecture']:<8}{str(add_marker):<6}"
+          f"{gt_coord:<16}{pred_coord:<16}{error:>7.2f}px  {confidence:<6}")
 
 errors = np.array([r["pixel_error"] for r in results])
 times = np.array([r["time_sec"] for r in results])
