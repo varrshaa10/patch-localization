@@ -101,39 +101,6 @@ python dataset/generate_dataset.py --architecture both --num_pairs 60 --output_d
   - `pair_id`, `architecture`, `ref_path`, `search_path`, `gt_x`, `gt_y`, `angle`, `scale`, `add_marker`, `mode`
 
 ---
-### Optional: RGB Dataset Generation
-
-The dataset generator also supports RGB output for testing color-tinted SEM-style patterns.
-
-Generate a small RGB test dataset:
-
-```bash
-python dataset/generate_dataset.py --architecture both --num_pairs 3 --output_dir ./tests/synthetic_data_rgb --color
-```
-
-This generates RGB reference/search pairs and a `ground_truth.csv` file in:
-
-```text
-./tests/synthetic_data_rgb/
-```
-
-To run inference on an RGB pair:
-
-```bash
-cd algorithm/core
-python infer.py --reference ../tests/synthetic_data_rgb/pair_2_reference_rgb.png --search ../tests/synthetic_data_rgb/pair_2_search_rgb.png
-```
-
-Example output:
-
-```text
-Predicted center (x, y): (762, 236)
-NCC score: 0.933
-Ambiguity ratio: 0.923  Confidence: HIGH
-Best angle: 0.0 deg, best scale: 0.100
-```
-
-RGB generation is an optional robustness test. The primary evaluation uses the grayscale synthetic dataset.
 
 ### Run Inference on a Single Pair
 
@@ -205,35 +172,6 @@ Ratio on PASSED pairs (n=50): min=0.980, max=0.993, mean=0.985
 Results are written to `batch_results.csv`.
 
 ---
-### Reproduced Evaluation
-
-Evaluation on 40 generated grayscale reference/search pairs:
-
-| Metric | Result |
-|---|---:|
-| Accuracy @ 1 px | 80.0% |
-| Accuracy @ 2 px | 80.0% |
-| Accuracy @ 3 px | 80.0% |
-| Accuracy @ 5 px | 80.0% |
-| Median localization error | 0.45 px |
-| Mean localization error | 52.72 px |
-| Mean inference time | 1.87 s/image |
-| Successful pairs | 32/40 |
-| Ambiguous/failure pairs | 8/40 |
-
-### Failure Analysis
-
-The 8 failure cases are intentional marker-free periodic-array cases.
-Multiple candidate locations produce essentially identical NCC scores.
-
-For these cases:
-
-- Ambiguity ratio = 1.000
-- Confidence = LOW
-- The matcher reports multiple candidate locations instead of falsely claiming a unique location.
-
-The remaining 32 marker-aided cases achieve sub-pixel localization in the reproduced
-evaluation, with a median error of 0.45 px.
 
 ## Results Summary
 
