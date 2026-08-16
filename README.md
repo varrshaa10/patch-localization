@@ -392,7 +392,7 @@ See [citations.md](citations.md) for full citations and their justifications.
 
 ## License
 
-This project is licensed under the MIT License. To know about the license LICENSE.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ---
 
