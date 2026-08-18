@@ -345,7 +345,7 @@ See [citations.md](citations.md) for full citations and their justifications.
 
 **Team:** Patch Localization Team  
 **Challenge:** Applied Materials Navigation-Error Recovery (SEMI-India Hackathon)  
-**Deadline:** August 16, 2025  
+**Deadline:** August 18, 2026  
 **Approach:** Classical CV (NCC + multi-scale/rotation) + confidence detection (Lowe-inspired ratio test)  
 **Novelty:** Ambiguity-detection via ratio test addresses the periodic-pattern hard case systematically.
 
