@@ -356,10 +356,19 @@ See [citations.md](citations.md) for full citations and their justifications.
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ---
-## Zip folder link
+## Submission Materials
 
-The link for the zip file is attached below.
-<img width="1000" height="73" alt="image" src="https://github.com/user-attachments/assets/5c7142eb-fbd0-4ec3-9ac2-07d7fd3c2c58" />
+### Project ZIP
+
+[Download Project ZIP](https://drive.google.com/file/d/1A-lyJkwbOrboGI3CJizZCzMYBTh03gav/view?usp=sharing)
+
+Complete project package containing the source code, dataset generator, localization algorithm, evaluation files, and supporting materials.
+
+### Demonstration Video
+
+[View Project Demonstration Video](https://drive.google.com/file/d/1ZqhN1GQDWdBO-5VYBj3xeM470oZAcds9/view?usp=sharing)
+
+Video demonstration showing the localization pipeline running on a sample image pair and displaying the predicted result.
 
 
 ## Questions or Issues?
