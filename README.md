@@ -356,6 +356,11 @@ See [citations.md](citations.md) for full citations and their justifications.
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ---
+## Zip folder link
+
+The link for the zip file is attached below.
+<img width="1000" height="73" alt="image" src="https://github.com/user-attachments/assets/5c7142eb-fbd0-4ec3-9ac2-07d7fd3c2c58" />
+
 
 ## Questions or Issues?
 
