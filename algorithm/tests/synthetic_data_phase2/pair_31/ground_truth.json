@@ -1,0 +1,12 @@
+{
+  "pair_id": 31,
+  "architecture": "finfet",
+  "category": "present_degraded",
+  "ref_path": "../tests/synthetic_data_phase2/pair_31/reference.png",
+  "search_path": "../tests/synthetic_data_phase2/pair_31/search.png",
+  "gt_x": 555.64,
+  "gt_y": 623.32,
+  "gt_theta": 2.64,
+  "gt_scale": 10.4617,
+  "found": 1
+}

@@ -1,0 +1,26 @@
+dataset:
+  architectures: [dram, finfet]
+  num_pairs: 60
+  output_dir: ./tests/synthetic_data
+  jitter: true
+  marker_ratio: 5
+
+matching:
+  angle_range: 3
+  angle_step: 1
+  scale_center: 0.10
+  scale_range: 0.02
+  scale_step: 0.005
+  tie_tolerance: 0.005
+  peaks_per_scale: 6
+  cluster_dist: 20
+  ambiguity_ratio_threshold: 0.995
+
+evaluation:
+  tolerances_px: [1, 2, 3, 5, 10, 20, 50]
+  fail_threshold_px: 50
+
+paths:
+  ground_truth_csv: ../tests/synthetic_data/ground_truth.csv
+  results_csv: batch_results.csv
+  pr_curve_png: pr_curve.png

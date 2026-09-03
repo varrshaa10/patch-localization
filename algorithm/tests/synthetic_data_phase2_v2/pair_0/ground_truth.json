@@ -1,0 +1,12 @@
+{
+  "pair_id": 0,
+  "architecture": "dram",
+  "category": "present_nominal",
+  "ref_path": "../tests/synthetic_data_phase2/pair_0/reference.png",
+  "search_path": "../tests/synthetic_data_phase2/pair_0/search.png",
+  "gt_x": 511.19,
+  "gt_y": 137.67,
+  "gt_theta": -4.86,
+  "gt_scale": 8.4333,
+  "found": 1
+}

@@ -1,0 +1,17 @@
+import json
+import cv2
+from rotation_search import rotation_search
+
+for i in range(5):
+    with open(f"../tests/synthetic_data/pair_{i}_meta.json") as f:
+        meta = json.load(f)
+
+    image = cv2.imread("../tests/" + meta["image_path"])
+    template = cv2.imread("../tests/" + meta["template_path"])
+
+    pred_x, pred_y, score, best_angle = rotation_search(image, template)
+    gt_x, gt_y = meta["gt_x"], meta["gt_y"]
+    error = ((pred_x - gt_x)**2 + (pred_y - gt_y)**2) ** 0.5
+
+    print(f"pair {i}: true_angle={meta['gt_angle']:.1f} scale={meta['gt_scale']:.2f} "
+          f"-> found_angle={best_angle:.1f}, error={error:.2f}px, score={score:.3f}")

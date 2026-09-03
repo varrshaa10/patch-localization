@@ -1,0 +1,12 @@
+{
+  "pair_id": 5,
+  "architecture": "finfet",
+  "category": "present_nominal",
+  "ref_path": "../tests/synthetic_data_phase2/pair_5/reference.png",
+  "search_path": "../tests/synthetic_data_phase2/pair_5/search.png",
+  "gt_x": 731.77,
+  "gt_y": 864.26,
+  "gt_theta": -1.62,
+  "gt_scale": 8.914,
+  "found": 1
+}

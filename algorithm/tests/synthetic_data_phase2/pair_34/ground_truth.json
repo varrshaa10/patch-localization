@@ -1,0 +1,12 @@
+{
+  "pair_id": 34,
+  "architecture": "dram",
+  "category": "present_degraded",
+  "ref_path": "../tests/synthetic_data_phase2/pair_34/reference.png",
+  "search_path": "../tests/synthetic_data_phase2/pair_34/search.png",
+  "gt_x": 367.98,
+  "gt_y": 506.87,
+  "gt_theta": -1.28,
+  "gt_scale": 9.9435,
+  "found": 1
+}

@@ -1,0 +1,12 @@
+{
+  "pair_id": 98,
+  "architecture": "dram",
+  "category": "absent",
+  "ref_path": "../tests/synthetic_data_phase2/pair_98/reference.png",
+  "search_path": "../tests/synthetic_data_phase2/pair_98/search.png",
+  "gt_x": null,
+  "gt_y": null,
+  "gt_theta": null,
+  "gt_scale": null,
+  "found": 0
+}
