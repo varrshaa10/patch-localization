@@ -14,3 +14,9 @@ build/
 algorithm/tests/
 algorithm/docs/examples/
 
+
+__pycache__/
+*.pyc
+venv/
+fresh-verify/
+*.egg-info/
