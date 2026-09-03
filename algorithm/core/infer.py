@@ -330,7 +330,7 @@ def main():
     parser.add_argument("--reference", required=True, help="Path to reference image")
     parser.add_argument("--search", required=True, help="Path to search image")
     args = parser.parse_args()
-    x, y, score, ratio, confidence, angle, scale, candidates = run_inference(args.reference, args.search)
+    x, y, score, ratio, confidence, angle, scale, candidates, near_best_count, top2_margin = run_inference(args.reference, args.search)
     print(f"Predicted center (x, y): ({x}, {y})")
     print(f"NCC score: {score:.3f}")
     print(f"Ambiguity ratio: {ratio:.3f}  Confidence: {confidence}")
