@@ -1,9 +1,40 @@
 # Patch Localization
 
+## Project Overview
+
 Classical computer vision for locating a reference crop in a larger SEM-style
 search image. The implementation uses OpenCV normalized cross-correlation,
 multi-scale search, multi-rotation search, and phase-correlation reranking.
 It does not use machine learning or neural-network weights.
+
+## Phase 2 Updates (from Phase 1)
+
+Phase 2 extends the Phase 1 NCC matcher to handle pose variation, repeated
+structures, degraded images, and explicit match rejection:
+
+- `algorithm/core/scale_rotation_search.py` searches the direct zoom range
+  8.0-12.0 and converts each zoom to the internal template scale used by NCC.
+- `algorithm/core/infer.py` adds coarse-to-fine multi-angle and multi-zoom
+  search, keeps multiple peaks per scale, clusters candidates by location, and
+  computes a top-two margin for ambiguity and rejection decisions. It also
+  supports weighted-NCC, phase-correlation, subregion-consistency, and
+  majority-vote reranking helpers.
+- `register.py` is the Phase 2 batch entry point. It accepts several common
+  reference/search CSV column names, resolves relative image paths from the
+  CSV directory, runs each pair in a timed worker, reranks the strongest
+  candidates, converts internal scale to output zoom, and writes both
+  predictions and a companion timings/error log. A `top2_margin` threshold
+  (`0.0002`) controls the `found` decision.
+- `algorithm/dataset/generate_dataset_phase2.py` adds nominal, degraded, and
+  absent synthetic pairs, grayscale and RGB generation, scale/size jitter,
+  Gaussian and shot noise, blur, and rotated references.
+- `algorithm/tests/official_phase2/` adds the organizer's 20-pair fixtures,
+  ground truth, manifest, reference/search images, predictions, and timing
+  files. `algorithm/tests/synthetic_data_phase2/` contains the larger generated
+  Phase 2 dataset and registration outputs for local checks.
+
+The official scorer is `score_official_phase2.py`; it reports per-set credit,
+rejection F1, pose accuracy, and runtime from the official Phase 2 fixtures.
 
 ## Setup
 
@@ -103,6 +134,30 @@ To reproduce the report after generating official predictions:
 ```bash
 python score_official_phase2.py
 ```
+
+## Running Phase 2 (for organizers)
+
+From a clean machine, clone the repository, create and activate a virtual
+environment, install the pinned dependencies, run registration on the checked-in
+official pairs, and score the resulting predictions:
+
+```bash
+git clone https://github.com/varrshaa10/patch-localization.git
+cd patch-localization
+python -m venv venv
+
+# Windows PowerShell
+venv\Scripts\Activate.ps1
+
+pip install -r requirements.txt
+python register.py --input algorithm/tests/official_phase2/pairs.csv --output algorithm/tests/official_phase2/predictions.csv
+python score_official_phase2.py
+```
+
+`register.py` also writes
+`algorithm/tests/official_phase2/predictions_timings.csv`. The scorer reads
+these two output files plus the checked-in `ground_truth.csv` and reports the
+Phase 2 evaluation metrics.
 
 ## Repository Contents
 
