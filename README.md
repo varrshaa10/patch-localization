@@ -136,10 +136,13 @@ detection **F1 = 0.8413**.
 The official scorer is `score_official_phase2.py`. With the 20-pair official
 predictions, the latest verified results were:
 
+Set C is scored via the Rejection F1 metric below, not localization credit.
+
 | Metric | Result | Organizer baseline |
 |---|---:|---:|
 | Set A mean credit | 0.975 | 1.000 |
 | Set B mean credit | 0.967 | 0.467 |
+| Set C rejection (TN out of pairs) | 3/4 correctly rejected | — |
 | Set D mean credit | 1.000 | 1.000 |
 | Rejection F1 | 0.9697 (TP=16, FP=1, FN=0, TN=3) | 0.897 |
 | Scale error, median / worst | 1.004% / 3.030% | 1.0% / 3.0% |
