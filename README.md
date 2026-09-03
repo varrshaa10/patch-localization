@@ -36,7 +36,7 @@ structures, degraded images, and explicit match rejection:
 - `algorithm/dataset/generate_dataset_phase2.py` adds nominal, degraded, and
   absent synthetic pairs, grayscale and RGB generation, scale/size jitter,
   Gaussian and shot noise, blur, and rotated references.
-- `algorithm/tests/official_phase2/` adds the organizer's 20-pair fixtures,
+- `algorithm/tests/official_phase2/` adds a self-constructed 20-pair validation set mimicking the four organizer categories (A/B/C/D), used for local sanity-checking against the I/O contract,
   ground truth, manifest, reference/search images, predictions, and timing
   files. `algorithm/tests/synthetic_data_phase2/` contains the larger generated
   Phase 2 dataset and registration outputs for local checks.
