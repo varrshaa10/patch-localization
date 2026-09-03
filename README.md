@@ -25,6 +25,14 @@ structures, degraded images, and explicit match rejection:
   candidates, converts internal scale to output zoom, and writes both
   predictions and a companion timings/error log. A `top2_margin` threshold
   (`0.0002`) controls the `found` decision.
+- `register.py` uses a two-stage runtime search: a half-resolution grid pass
+  covers the full angle/zoom range to cheaply rank candidates, followed by
+  full-resolution NCC refinement of only the top 5 candidates before
+  phase-correlation reranking. This reduced median runtime from approximately
+  5.07 seconds to approximately 2.4 seconds per pair.
+- `analyze_scores.py` joins `predictions_timings.csv` (`best_score`,
+  `top2_margin`, and `found`) with `ground_truth.csv` to compare GT-present and
+  GT-absent score distributions and calibrate `SCORE_THRESHOLD`.
 - `algorithm/dataset/generate_dataset_phase2.py` adds nominal, degraded, and
   absent synthetic pairs, grayscale and RGB generation, scale/size jitter,
   Gaussian and shot noise, blur, and rotated references.
@@ -82,13 +90,21 @@ Registration uses the margin returned by the coarse-to-fine search:
 
 ```text
 FIND_THRESHOLD = 0.0002
-found = 1 and score = top2_margin       when top2_margin > FIND_THRESHOLD
-found = 0 and score = 1 - top2_margin   otherwise
+SCORE_THRESHOLD = 0.30
+found = 1 when top2_margin > FIND_THRESHOLD AND best_score > SCORE_THRESHOLD
+found = 0 otherwise
+score = best_score in both the found=1 and found=0 cases
 ```
 
-The margin is the signal used for the final `found` decision and is also
-written to the timings CSV. Failed workers and timeouts produce a zero result
-and are recorded in the timing log.
+The `SCORE_THRESHOLD` was added because `top2_margin` alone was insufficient
+to reject absent-reference pairs: a low-quality best match can still clearly
+beat the second-best candidate. It was calibrated with `analyze_scores.py`
+against a self-generated present/absent score distribution (GT-present range
+`0.338-0.954`, GT-absent range `0.258-0.377`, with some overlap); `0.30` was
+chosen to preserve recall on present pairs because localization+pose scoring
+(60 pts) outweighs rejection scoring (15 pts). The margin and best score are
+written to the timings CSV, while failed workers and timeouts produce a zero
+result and are recorded in the timing log.
 
 ## Phase 2 Synthetic Dataset
 
@@ -125,9 +141,10 @@ predictions, the latest verified results were:
 | Set A mean credit | 0.975 | 1.000 |
 | Set B mean credit | 0.967 | 0.467 |
 | Set D mean credit | 1.000 | 1.000 |
-| Rejection F1 | 0.9143 | 0.897 |
+| Rejection F1 | 0.9697 (TP=16, FP=1, FN=0, TN=3) | 0.897 |
 | Scale error, median / worst | 1.004% / 3.030% | 1.0% / 3.0% |
-| Theta error, median / worst | 0.350° / 0.900° | 0.35° / 1.10° |
+| Theta error, median / worst | 0.300° / 0.900° | 0.35° / 1.10° |
+| Median runtime | ~2.4s | — |
 
 To reproduce the report after generating official predictions:
 
@@ -171,6 +188,7 @@ patch-localization/
 │   └── dataset/
 │       └── generate_dataset_phase2.py
 ├── register.py
+├── analyze_scores.py
 ├── requirements.txt
 └── README.md
 ```
@@ -181,4 +199,6 @@ Periodic structures can produce several nearly equivalent correlation peaks.
 The margin-based decision helps reject ambiguous matches, but it cannot create
 information that is absent from the images. Navigation markers, additional
 modalities, or temporal context are needed to disambiguate genuinely repeating
-patterns.
+patterns. The present and absent score distributions also overlap (present min
+`0.338`, absent max `0.377` on the local 20-pair set), which is a known,
+disclosed limitation of the rejection threshold and is not fully resolved.
