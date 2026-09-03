@@ -57,6 +57,8 @@ def evaluate():
     present_credits = []
     present_errors = []
     set_stats = {name: {'credits': [], 'errors': []} for name in SET_GROUPS}
+    set_summary = {}
+    set_c_tn = 0
 
     tp = fp = fn = tn = 0
     scale_errors = []
@@ -104,6 +106,8 @@ def evaluate():
                 fp += 1
             else:
                 tn += 1
+                if pair_id in SET_GROUPS['Set C']:
+                    set_c_tn += 1
 
     precision = tp / (tp + fp) if (tp + fp) else 0.0
     recall = tp / (tp + fn) if (tp + fn) else 0.0
@@ -129,6 +133,7 @@ def evaluate():
             median_err_text = 'N/A'
         else:
             median_err_text = f'{median_err:.3f}px'
+        set_summary[set_name] = (mean_credit, median_err_text)
         print(f'{set_name}:')
         print(f'  pairs: {len(ids)}')
         print(f'  mean credit: {mean_credit:.3f}')
@@ -173,6 +178,18 @@ def evaluate():
     print('  Rejection F1: 0.897')
     print('  Pose scale worst/median: 3.0% / 1.0%')
     print('  Pose theta worst/median: 1.10° / 0.35°')
+    print()
+
+    print('Summary Table')
+    print('Set   | Metric        | Value')
+    print('Set A | mean credit   | {:.3f}'.format(set_summary['Set A'][0]))
+    print('Set A | median px err | {}'.format(set_summary['Set A'][1]))
+    print('Set B | mean credit   | {:.3f}'.format(set_summary['Set B'][0]))
+    print('Set B | median px err | {}'.format(set_summary['Set B'][1]))
+    print('Set C | rejection     | {}/{} TN; rejection-only, see F1 above'.format(
+        set_c_tn, len(SET_GROUPS['Set C'])))
+    print('Set D | mean credit   | {:.3f}'.format(set_summary['Set D'][0]))
+    print('Set D | median px err | {}'.format(set_summary['Set D'][1]))
 
 
 if __name__ == '__main__':
