@@ -2,11 +2,11 @@
   "pair_id": 18,
   "architecture": "dram",
   "category": "present_nominal",
-  "ref_path": "../tests/synthetic_data_phase2/pair_18/reference.png",
-  "search_path": "../tests/synthetic_data_phase2/pair_18/search.png",
-  "gt_x": 546.98,
-  "gt_y": 919.82,
-  "gt_theta": -1.16,
-  "gt_scale": 9.4867,
+  "ref_path": "pair_18/reference.png",
+  "search_path": "pair_18/search.png",
+  "gt_x": 308.14,
+  "gt_y": 62.61,
+  "gt_theta": 2.72,
+  "gt_scale": 11.1963,
   "found": 1
 }

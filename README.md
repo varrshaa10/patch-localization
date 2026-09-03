@@ -38,8 +38,11 @@ structures, degraded images, and explicit match rejection:
   Gaussian and shot noise, blur, and rotated references.
 - `algorithm/tests/official_phase2/` adds a self-constructed 20-pair validation set mimicking the four organizer categories (A/B/C/D), used for local sanity-checking against the I/O contract,
   ground truth, manifest, reference/search images, predictions, and timing
-  files. `algorithm/tests/synthetic_data_phase2/` contains the larger generated
-  Phase 2 dataset and registration outputs for local checks.
+  files. The repository's **self-constructed local fixture** contains Set A = 8 pairs, Set B = 6 pairs,
+  Set C = 4 pairs, and Set D = 2 pairs. The generated Phase 2 data is kept in
+  `algorithm/tests/synthetic_data_phase2/` (older 80-pair run),
+  `algorithm/tests/synthetic_data_phase2_v2/` (current 100-pair evaluation), and
+  `algorithm/tests/synthetic_data_phase2_set_d/` (20 RGB Set-D-style pairs).
 
 The official scorer is `score_official_phase2.py`; it reports per-set credit,
 rejection F1, pose accuracy, and runtime from the official Phase 2 fixtures.
@@ -113,7 +116,7 @@ grayscale or RGB variants:
 
 ```bash
 python algorithm/dataset/generate_dataset_phase2.py \
-  --output_dir algorithm/tests/synthetic_data_phase2 \
+  --output_dir algorithm/tests/synthetic_data_phase2_v2 \
   --num_nominal 30 \
   --num_degraded 30 \
   --num_absent 40 \
@@ -124,17 +127,56 @@ Run registration on the generated pairs:
 
 ```bash
 python register.py \
-  --input algorithm/tests/synthetic_data_phase2/pairs_generated.csv \
-  --output outputs/synthetic_margin_check.csv
+  --input algorithm/tests/synthetic_data_phase2_v2/ground_truth_combined.csv \
+  --output outputs/final_main_predictions_v2.csv
 ```
 
-The checked local 80-pair run produced **25/60 present pairs within 5 px** and
-detection **F1 = 0.8413**.
+The current local evaluation target is the 100-pair `v2` dataset: 30 nominal
+present pairs, 30 degraded present pairs, and 40 absent pairs. Evaluate the
+predictions against `ground_truth_combined.csv`; report localization on the 60
+present pairs and rejection metrics on all 100 pairs. The generator writes each
+manifest as `ground_truth_combined.csv` alongside its `pair_<id>/` directories.
+The documented `register.py` evaluation produced 52 TP, 25 FP, 8 FN, and
+15 TN: precision `0.675325`, recall `0.866667`, and rejection F1 `0.759124`.
+It localized **26/60 present pairs within 5 px**. The separate experimental
+`tmp_eval_v2.py` evaluator reported 56 TP, 22 FP, 4 FN, and 18 TN because it
+uses a different search and scoring path; that result is not the score for the
+README registration command. The older 80-pair result (**24/60** or **25/60**)
+was also from an earlier search version and is not directly comparable.
+Existing checked-in manifests were created with an older path format; regenerate
+the selected directory before running registration so the manifest paths match
+its local pair directories.
+
+This synthetic evaluation is only for local algorithm development. It is not
+the organizer submission dataset. The `v2` directory is a later local variant
+with 40 absent pairs, while `synthetic_data_phase2_set_d` is a separate 20-pair
+RGB experiment; neither replaces the official fixture.
 
 ## Official Phase 2 Evaluation
 
 The official scorer is `score_official_phase2.py`. With the 20-pair official
 predictions, the latest verified results were:
+
+For the local organizer-format sanity check, run registration on the
+checked-in self-constructed input `algorithm/tests/official_phase2/pairs.csv`.
+This input points to 20 local fixture image pairs split across Sets A-D. The resulting
+`predictions.csv` and `predictions_timings.csv` are the files consumed by the
+local scorer. This fixture is **not confirmed organizer-provided data** and
+must not be treated as the real submission test set.
+
+The generated datasets are also required for local development: run the
+100-pair `algorithm/tests/synthetic_data_phase2_v2/` evaluation to measure
+behavior on our controlled nominal, degraded, and absent cases. The 80-pair
+dataset and 20-pair RGB Set-D-style dataset are older or specialized local
+experiments. They do not replace organizer data, and their scores are not
+organizer scores.
+
+For the actual organizer evaluation, use the dataset and submission format
+provided by the organizers. Run `register.py` on their supplied reference/search
+pairs and submit the resulting predictions file exactly as requested. The
+organizer's hidden or supplied test data is not present in this repository, so
+the local 20-pair fixture and our generated 100-pair dataset are not sufficient
+to claim organizer validation by themselves.
 
 Set C is scored via the Rejection F1 metric below, not localization credit.
 

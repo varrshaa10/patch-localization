@@ -2,11 +2,11 @@
   "pair_id": 58,
   "architecture": "dram",
   "category": "present_degraded",
-  "ref_path": "../tests/synthetic_data_phase2/pair_58/reference.png",
-  "search_path": "../tests/synthetic_data_phase2/pair_58/search.png",
-  "gt_x": 493.41,
-  "gt_y": 703.54,
-  "gt_theta": 4.33,
-  "gt_scale": 10.1032,
+  "ref_path": "pair_58/reference.png",
+  "search_path": "pair_58/search.png",
+  "gt_x": 438.49,
+  "gt_y": 884.83,
+  "gt_theta": -2.64,
+  "gt_scale": 11.0722,
   "found": 1
 }

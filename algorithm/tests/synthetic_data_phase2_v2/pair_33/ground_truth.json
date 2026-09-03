@@ -2,11 +2,11 @@
   "pair_id": 33,
   "architecture": "finfet",
   "category": "present_degraded",
-  "ref_path": "../tests/synthetic_data_phase2/pair_33/reference.png",
-  "search_path": "../tests/synthetic_data_phase2/pair_33/search.png",
-  "gt_x": 691.48,
-  "gt_y": 435.79,
-  "gt_theta": 3.78,
-  "gt_scale": 10.6221,
+  "ref_path": "pair_33/reference.png",
+  "search_path": "pair_33/search.png",
+  "gt_x": 803.28,
+  "gt_y": 706.47,
+  "gt_theta": 3.91,
+  "gt_scale": 8.5014,
   "found": 1
 }
