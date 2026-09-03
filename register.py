@@ -14,12 +14,19 @@ CORE_DIR = ROOT / "algorithm" / "core"
 if str(CORE_DIR) not in sys.path:
     sys.path.insert(0, str(CORE_DIR))
 
-from infer import coarse_to_fine_search, rerank_peak_candidates_phase_correlation  # noqa: E402
+from infer import (  # noqa: E402
+    _candidate_clusters,
+    rerank_peak_candidates_phase_correlation,
+)
+from ncc import ncc_match, ncc_match_multi  # noqa: E402
+from rotation_search import rotate_image  # noqa: E402
+from scale_rotation_search import scale_template  # noqa: E402
 
 OUTPUT_FIELDS = ["pair_id", "x", "y", "theta", "scale", "found", "score"]
-TIME_LOG_FIELDS = ["pair_id", "time_sec", "top2_margin", "status", "error"]
+TIME_LOG_FIELDS = ["pair_id", "time_sec", "best_score", "top2_margin", "found", "status", "error"]
 TIMEOUT_SECONDS = 15.0
 FIND_THRESHOLD = 0.0002
+SCORE_THRESHOLD = 0.30
 TRACE_ERRORS = os.environ.get("REGISTER_TRACE_ERRORS", "1") == "1"
 
 
@@ -64,6 +71,70 @@ def _zero_result(pair_id):
     }
 
 
+def _two_stage_search(image, template):
+    """Rank the full pose grid cheaply, then search only its best five poses."""
+    import cv2
+    import numpy as np
+
+    image_small = cv2.resize(
+        image, (max(1, image.shape[1] // 2), max(1, image.shape[0] // 2)),
+        interpolation=cv2.INTER_AREA,
+    )
+    template_small = cv2.resize(
+        template, (max(1, template.shape[1] // 2), max(1, template.shape[0] // 2)),
+        interpolation=cv2.INTER_AREA,
+    )
+
+    angle_range = 5
+    angle_step = 1
+    zoom_min = 8.0
+    zoom_max = 12.0
+    zoom_step = 0.5
+    pose_scores = []
+    for angle in np.arange(-angle_range, angle_range + angle_step, angle_step):
+        rotated = rotate_image(template_small, angle)
+        for zoom in np.arange(zoom_min, zoom_max + zoom_step, zoom_step):
+            scale = 1.0 / zoom
+            scaled = scale_template(rotated, scale)
+            if scaled.shape[0] < 4 or scaled.shape[1] < 4:
+                continue
+            if scaled.shape[0] >= image_small.shape[0] or scaled.shape[1] >= image_small.shape[1]:
+                continue
+            _, _, score = ncc_match(image_small, scaled)
+            pose_scores.append((float(score), float(angle), float(scale)))
+
+    if not pose_scores:
+        raise RuntimeError("No valid coarse candidates found -- check image/template sizes.")
+
+    all_candidates = []
+    for _, angle, scale in sorted(pose_scores, reverse=True)[:5]:
+        rotated = rotate_image(template, angle)
+        scaled = scale_template(rotated, scale)
+        if scaled.shape[0] < 4 or scaled.shape[1] < 4:
+            continue
+        if scaled.shape[0] >= image.shape[0] or scaled.shape[1] >= image.shape[1]:
+            continue
+        peaks = ncc_match_multi(image, scaled, num_peaks=6, min_distance=15)
+        all_candidates.extend((x, y, score, angle, scale) for x, y, score in peaks)
+
+    if not all_candidates:
+        raise RuntimeError("No valid full-resolution candidates found.")
+
+    img_h, img_w = image.shape[:2]
+    img_center = np.array([img_w / 2, img_h / 2])
+    best_score = max(candidate[2] for candidate in all_candidates)
+    near_best = [candidate for candidate in all_candidates if candidate[2] >= best_score - 0.005]
+    best = min(
+        near_best,
+        key=lambda candidate: np.linalg.norm(
+            np.array([candidate[0], candidate[1]]) - img_center
+        ),
+    )
+    sorted_clusters, top_candidates, top2_margin = _candidate_clusters(all_candidates, cluster_dist=20)
+    ratio = 0.0 if len(sorted_clusters) < 2 else sorted_clusters[1][1] / sorted_clusters[0][1]
+    return best, ratio, top_candidates, sorted_clusters, top2_margin
+
+
 def _worker(pair_id, reference_path, search_path, queue):
     try:
         if not os.path.exists(reference_path):
@@ -79,10 +150,7 @@ def _worker(pair_id, reference_path, search_path, queue):
         if template is None:
             raise FileNotFoundError(f"Could not read reference image: {reference_path}")
 
-        best, _, top_candidates, _, top2_margin = coarse_to_fine_search(
-            image, template, angle_range=5, angle_step=1,
-            zoom_min=8.0, zoom_max=12.0, zoom_step=0.5
-        )
+        best, _, top_candidates, _, top2_margin = _two_stage_search(image, template)
         if top_candidates:
             phase_candidates = [
                 (float(x), float(y), float(score), 0.0, 0.0)
@@ -98,8 +166,8 @@ def _worker(pair_id, reference_path, search_path, queue):
             margin = 1.0
         output_scale = 0.0 if internal_scale in (None, 0) else (1.0 / float(internal_scale))
 
-        if margin > FIND_THRESHOLD:
-            score_value = margin
+        if margin > FIND_THRESHOLD and best_score > SCORE_THRESHOLD:
+            score_value = best_score
             pose = {
                 "pair_id": str(pair_id),
                 "x": int(round(float(x))),
@@ -110,7 +178,7 @@ def _worker(pair_id, reference_path, search_path, queue):
                 "score": score_value,
             }
         else:
-            score_value = 1.0 - margin
+            score_value = best_score
             pose = {
                 "pair_id": str(pair_id),
                 "x": 0,
@@ -148,6 +216,10 @@ def _process_pair(pair_id, reference_path, search_path):
         return _zero_result(pair_id), elapsed, 0.0, "empty"
 
     if status == "ok":
+        print(
+            f"pair_id={pair_id} best_score={payload['score']:.6f} top2_margin={margin:.6f}",
+            file=sys.stderr,
+        )
         return payload, elapsed, margin, None
 
     error_message = rest[0] if rest else "unknown error"
@@ -220,7 +292,9 @@ def _write_time_log(output_csv, rows_in_order):
             writer.writerow({
                 "pair_id": row["pair_id"],
                 "time_sec": float(row["time_sec"]),
+                "best_score": float(row["best_score"]),
                 "top2_margin": float(row["top2_margin"]),
+                "found": int(row["found"]),
                 "status": row["status"],
                 "error": row.get("error", ""),
             })
@@ -255,7 +329,9 @@ def main():
         debug_rows.append({
             "pair_id": pair_id,
             "time_sec": elapsed_sec,
+            "best_score": float(prediction["score"]),
             "top2_margin": top2_margin,
+            "found": int(prediction["found"]),
             "status": "error" if error else "ok",
             "error": error or "",
         })
@@ -269,7 +345,11 @@ def main():
     if zero_margin_pairs:
         print("Zero-found top2_margin values:", file=sys.stderr)
         for item in zero_margin_pairs:
-            print(f"pair_id={item['pair_id']} top2_margin={item['top2_margin']} time_sec={item['time_sec']:.3f}", file=sys.stderr)
+            print(
+                f"pair_id={item['pair_id']} best_score={item['best_score']:.6f} "
+                f"top2_margin={item['top2_margin']} time_sec={item['time_sec']:.3f}",
+                file=sys.stderr,
+            )
 
     elapsed = time.perf_counter() - start
     print(f"rows_written={len(ordered_rows)}")
